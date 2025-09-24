@@ -4,22 +4,105 @@ format: html
 editor: visual
 ---
 
+
+
+read data
 ```{r}
+library(tidyverse)
+
+data <- readxl::read_xlsx("sample_data/Maybelline Wondersnatch 15.09.25.xlsx") %>%
+  janitor::clean_names() %>%
+  format_dates()
+```
+
+
+format dates function
+```{r}
+# is there a chance this could be user_last_interaction depending on how data exported?
 format_dates <- function(df){
-  df %>%
-    mutate(
-    last_interaction = as.Date(
-      last_interaction, 
-      format = "%d/%m/%Y"
-      ),
-    days_since_last_interaction = Sys.Date() - last_interaction,
-    days_since_last_interaction = as.numeric(days_since_last_interaction),
-    last_visited_date = as.Date(
-      last_visited_date, 
-      format = "%d/%m/%Y"
-      ),
-    days_since_last_visit = Sys.Date() - last_visited_date,
-    days_since_last_visit = as.numeric(days_since_last_visit)
+  
+  output_df <- df
+  
+  if ("last_interaction" %in% names(df)){
+    output_df <- output_df %>%
+      mutate(
+        last_interaction = as.Date(last_interaction, format = "%d/%m/%Y"),
+      days_since_last_interaction = as.numeric(Sys.Date() - last_interaction)
+      )
+  }
+  
+  if ("last_visited_date" %in% names(df)){
+    output_df <- output_df %>%
+      mutate(
+        last_visited_date = as.Date(last_visited_date, format = "%d/%m/%Y"),
+        days_since_last_visit = as.numeric(Sys.Date() - last_visited_date)
     )
+  }
+  
+  return(output_df)
+    
 }
+```
+
+find proportion of statuses in input df
+
+```{r}
+find_status_prop <- function(df, status_col = status, n_select){
+  
+  df %>%
+    count({{ status_col }}) %>%
+    mutate(prop = round(n/sum(n), 2)) %>%
+    pull(prop) 
+  
+} # will need to put in some protection incase rounding means we don't get exact number specifid
+
+find_status_prop(data)
+```
+
+Thinking if these values are returned as a default and then the user can customise them and the customised version will be passed to the next function
+
+parse locations
+
+```{r}
+find_locations <- function(df, country_col1, country_col2 = NULL){
+  
+}
+
+parse_locations <- function(df){
+  
+  df %>%
+    select(str_detect(colnames(.), "(?i)(country|city)"))
+}
+```
+
+overarching process df function
+
+```{r}
+
+process_df <- function(df, prop_vec, n_select, min_days_since_active = 5){
+  
+  n_statuses_vec <- sapply(prop_vec, function(x) round(x*n_select))
+  print(n_statuses_vec)
+  
+  select_diff <- n_select - sum(n_statuses_vec) 
+  
+  if (select_diff != 0){
+    i <- ifelse(select_diff < 0, which.max(n_statuses_vec), which.min(n_statuses_vec))
+    n_statuses_vec[i] <- n_statuses_vec[i] + select_diff
+  }
+  
+  df_filt <- df %>%
+    filter(days_since_last_interaction <= min_days_since_active)
+  
+  if (nrow(df_filt) < n_select){
+    stop(paste0("Only ", nrow(df_filt), " users active in the past ", min_days_since_active, " days. Increase the minimum number of days since active."))
+  }
+  
+  
+  
+}
+
+process_df(data, status_props, 150)
+
+
 ```
