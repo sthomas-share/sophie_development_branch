@@ -1,9 +1,9 @@
-what do i want?
-[x] need an upload button, need to be able to view the dataframe
-[] data layout displays? 
-[] maybe a chart that shows the proportion of each of the statuses
-[] a card that has the data
-[] a card that has the status
+# what do i want?
+#[done ui - x] need an upload button, need to be able to view the dataframe
+#[] data layout displays? 
+#[done ui - x ] maybe a chart that shows the proportion of each of the statuses
+#[] a card that has the data
+# [done ui - x] a card that has the status
 
 data_upload_mod_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -51,13 +51,15 @@ data_upload_mod_ui <- function(id) {
       ),
       DT::dataTableOutput(ns("data_display"))
     ),
-
-
-  
-                                
-      
-
-  
+ # card to create the status
+    bslib::card(
+      bslib::card_header("Status Summary",
+                         class = "bg-info text-white"),
+      bslib::card_body(
+        DT::dataTableOutput(ns("status_summary_table"))
+        )
+      )
+                          
   data_upload_mod_server <- function({
   moduleServer(id, function(input,
                             output,
