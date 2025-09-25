@@ -5,7 +5,7 @@ what do i want?
 [] a card that has the data
 [] a card that has the status
 
-data_upload_mod_ui <- function({
+data_upload_mod_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
   shiny::br(),
@@ -19,18 +19,40 @@ data_upload_mod_ui <- function({
                                   ".xlsx",
                                   ".xls")),
       shiny::br(),
-      shiny::checkboxInput(ns("header") "Header", TRUE),
-      shiny::radioboxInput(ns("sep"), "Separator",
+      shiny::checkboxInput(ns("header"), "Header", TRUE),
+      shiny::radioButtons(ns("sep"), "Separator",
                            choices = c(Comma = ",",
                                        Semicolon = ";",
                                        Tab = "\t"),
                             selected = ",")
       )
     )
-   ),
+   ),   # maybe the chart that shows the proportion of each of the statuses/card that has the status
+  bslib::card(
+    bslib::card_header("Proportion Of Statuses",
+                       class = "bg-primary text-white"
+                ),
+                bslib::card_body(
+                  plotlyOutput(ns("status_chart"))
+                  # chart for proportioning statuses - to do in server function
+                ),
+                full_screen = TRUE,
+    ),
   # data layout display/maybe a card that shows the data
+  bslib::card(
+    bslib::card_header("Uploaded Data Overview",
+                       bslib::card_body(
+                      dropdownButton_with_tooltip(
+        select_input_with_tooltip(id = ns("status_column"), title = "Status Column",
+                                  icon_info = "The name of the column with the influencer's status"),
+        select_input_with_tooltip(id = ns("display_columns"), title = "Display Columns",
+                                  icon_info = "The columns you want to display in the Uploaded Data table",
+                                  multiple_selections = TRUE)
+      ),
+      DT::dataTableOutput(ns("data_display"))
+    ),
 
-  # maybe the chart that shows the proportion of each of the statuses/card that has the status
+
   
                                 
       
